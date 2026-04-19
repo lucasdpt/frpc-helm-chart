@@ -1,0 +1,81 @@
+replicaCount: 1
+
+image:
+  repository: snowdreamtech/frpc
+  # Defaults to Chart.AppVersion if empty
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+frpc:
+  # FRP server address and port
+  serverAddr: "127.0.0.1"
+  serverPort: 7000
+
+  auth:
+    # Token value — creates a Secret automatically.
+    # Ignored if existingSecret is set.
+    token: ""
+
+  # Name of an existing Kubernetes Secret containing the auth token.
+  # If set, no Secret is created from auth.token.
+  existingSecret: ""
+  # Key inside the existing (or created) secret that holds the token.
+  existingSecretKey: "token"
+
+  log:
+    level: "info"
+    maxDays: 3
+
+  transport:
+    protocol: "tcp"    # tcp | kcp | quic | websocket | wss
+    tls:
+      # TLS is enabled by default since frp v0.52+.
+      # Set to false only if your server does not support TLS.
+      enable: true
+
+  # List of proxies to expose.
+  # Supported fields: name, type, localIP, localPort, remotePort,
+  #                   customDomains, subdomain, locations
+  proxies: []
+  # - name: ssh
+  #   type: tcp
+  #   localIP: 127.0.0.1
+  #   localPort: 22
+  #   remotePort: 6000
+  # - name: web
+  #   type: http
+  #   localPort: 80
+  #   customDomains:
+  #     - example.com
+
+  # Raw TOML appended verbatim at the end of frpc.toml (for advanced options).
+  extraConfig: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #     - ALL
+  # readOnlyRootFilesystem: true
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 64Mi
+  # requests:
+  #   cpu: 50m
+  #   memory: 32Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

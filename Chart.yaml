@@ -1,0 +1,15 @@
+apiVersion: v2
+name: frpc
+description: Helm chart for FRP client (frpc)
+type: application
+version: 0.1.0
+appVersion: "0.68.1"
+keywords:
+  - frp
+  - frpc
+  - tunnel
+  - reverse-proxy
+sources:
+  - https://github.com/fatedier/frp
+maintainers:
+  - name: zertus

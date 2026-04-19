@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "frpc.fullname" . }}
+  labels:
+    {{- include "frpc.labels" . | nindent 4 }}
+data:
+  frpc.toml: |
+    serverAddr = {{ .Values.frpc.serverAddr | quote }}
+    serverPort = {{ .Values.frpc.serverPort }}
+
+    [auth]
+    method = "token"
+    [auth.tokenSource]
+    type = "file"
+    [auth.tokenSource.file]
+    path = "/etc/frpc-secret/{{ .Values.frpc.existingSecretKey }}"
+
+    [log]
+    level = {{ .Values.frpc.log.level | quote }}
+    maxDays = {{ .Values.frpc.log.maxDays }}
+
+    [transport]
+    protocol = {{ .Values.frpc.transport.protocol | quote }}
+    [transport.tls]
+    enable = {{ .Values.frpc.transport.tls.enable }}
+    {{- range .Values.frpc.proxies }}
+
+    [[proxies]]
+    name = {{ .name | quote }}
+    type = {{ .type | quote }}
+    {{- with .localIP }}
+    localIP = {{ . | quote }}
+    {{- end }}
+    {{- with .localPort }}
+    localPort = {{ . }}
+    {{- end }}
+    {{- with .remotePort }}
+    remotePort = {{ . }}
+    {{- end }}
+    {{- with .subdomain }}
+    subdomain = {{ . | quote }}
+    {{- end }}
+    {{- with .customDomains }}
+    customDomains = [{{ range . }}{{ . | quote }}, {{ end }}]
+    {{- end }}
+    {{- with .locations }}
+    locations = [{{ range . }}{{ . | quote }}, {{ end }}]
+    {{- end }}
+    {{- end }}
+    {{- with .Values.frpc.extraConfig }}
+    {{ . | nindent 4 }}
+    {{- end }}

@@ -1,0 +1,17 @@
+FRP client (frpc) deployed!
+
+Server: {{ .Values.frpc.serverAddr }}:{{ .Values.frpc.serverPort }}
+
+{{- if .Values.frpc.existingSecret }}
+Auth token sourced from existing Secret: {{ .Values.frpc.existingSecret }} (key: {{ .Values.frpc.existingSecretKey }})
+{{- else if .Values.frpc.auth.token }}
+Auth token sourced from Secret: {{ include "frpc.fullname" . }} (key: {{ .Values.frpc.existingSecretKey }})
+{{- else }}
+⚠  WARNING: No auth token configured!
+   Set frpc.auth.token or frpc.existingSecret in your values.
+{{- end }}
+
+Proxies configured: {{ len .Values.frpc.proxies }}
+{{- range .Values.frpc.proxies }}
+  - {{ .name }} ({{ .type }})
+{{- end }}
