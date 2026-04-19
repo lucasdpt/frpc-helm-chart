@@ -1,0 +1,87 @@
+name: Release Helm Chart
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write  # create GitHub Releases and push to gh-pages
+  pages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: helm lint .
+
+      - name: Package chart
+        run: |
+          # Strip the leading 'v' from the tag (v0.1.0 → 0.1.0)
+          VERSION="${GITHUB_REF_NAME#v}"
+          helm package . --destination .dist --version "$VERSION"
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES=$(git tag -l --format='%(contents)' "$TAG")
+          NOTES="${NOTES:-Helm chart release $TAG}"
+
+          if gh release view "$TAG" &>/dev/null; then
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes "$NOTES"
+            gh release upload "$TAG" .dist/*.tgz --clobber
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "$NOTES" \
+              .dist/*.tgz
+          fi
+
+      # Maintains an index.yaml on the gh-pages branch so the repo can be
+      # added with: helm repo add frpc https://<owner>.github.io/<repo>
+      - name: Update Helm repo index on gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}"
+
+          # Save packaged chart before switching branches
+          mkdir -p /tmp/new-charts
+          cp .dist/*.tgz /tmp/new-charts/
+
+          # Checkout gh-pages or create it as an orphan branch
+          if git ls-remote --exit-code origin gh-pages; then
+            git fetch origin gh-pages
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+          fi
+
+          # Merge new chart into the existing index, or create it from scratch
+          if [ -f index.yaml ]; then
+            helm repo index /tmp/new-charts --url "$DOWNLOAD_URL" --merge index.yaml
+          else
+            helm repo index /tmp/new-charts --url "$DOWNLOAD_URL"
+          fi
+
+          cp /tmp/new-charts/index.yaml index.yaml
+          git add index.yaml
+          git diff --staged --quiet || \
+            git commit -m "Update Helm repo index for ${{ github.ref_name }}"
+          git push origin gh-pages
