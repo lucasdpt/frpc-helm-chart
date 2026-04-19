@@ -15,7 +15,7 @@ Uses the [`snowdreamtech/frpc`](https://hub.docker.com/r/snowdreamtech/frpc) Doc
 This chart is published via GitHub Releases and served as a Helm repository from GitHub Pages.
 
 ```bash
-helm repo add frpc https://<your-github-username>.github.io/<your-repo-name>
+helm repo add frpc https://lucasdpt.github.io/frpc-helm-chart
 helm repo update
 helm install my-frpc frpc/frpc -f my-values.yaml
 ```
