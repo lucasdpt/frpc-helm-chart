@@ -35,6 +35,8 @@ spec:
         - name: frpc
           image: "{{ .Values.image.repository }}:{{ include "frpc.imageTag" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - frpc
           args:
             - -c
             - /etc/frpc/frpc.toml
