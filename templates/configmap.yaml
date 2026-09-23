@@ -47,6 +47,9 @@ data:
     {{- with .locations }}
     locations = [{{ range . }}{{ . | quote }}, {{ end }}]
     {{- end }}
+    {{- with .proxyProtocolVersion }}
+    transport.proxyProtocolVersion = {{ . | quote }}
+    {{- end }}
     {{- end }}
     {{- with .Values.frpc.extraConfig }}
     {{ . | nindent 4 }}
